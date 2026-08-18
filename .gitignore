@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+venv/
+
+# Packages
+*.egg-info/
+
+# Data
+data/*.csv
+data/*.parquet
+
+# Models
+models/*.pkl
+models/*.joblib
+
+# ML experiment tracking
+mlruns/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
