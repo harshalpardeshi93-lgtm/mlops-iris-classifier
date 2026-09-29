@@ -29,3 +29,39 @@ mlruns/
 # IDE
 .vscode/
 .idea/
+
+
+# =========================================================
+# MLflow
+# =========================================================
+mlflow.db
+mlruns/
+*.db
+
+# =========================================================
+# Python
+# =========================================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# =========================================================
+# Virtual Environments
+# =========================================================
+.venv/
+.venv-feast/
+.venv-mlflow/
+venv/
+
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# MLflow generated artifacts
+mlartifacts/
+
+# Generated confusion matrices
+confusion_matrix_*.png
