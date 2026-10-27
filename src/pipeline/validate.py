@@ -1,9 +1,9 @@
+
 import argparse
 import logging
 import sys
 
 import pandas as pd
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -11,7 +11,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("validate")
-
 
 EXPECTED_COLUMNS = {
     "sepal length (cm)",
@@ -25,13 +24,11 @@ EXPECTED_COLUMNS = {
     "petal_length_bin",
 }
 
-
 VALID_SPECIES = {
     "setosa",
     "versicolor",
-    "virginica"
+    "virginica",
 }
-
 
 RANGE_CHECKS = {
     "sepal length (cm)": (3.0, 9.0),
@@ -42,63 +39,51 @@ RANGE_CHECKS = {
 
 
 class DataValidationError(Exception):
-    pass
+    """Raised when dataset validation fails."""
 
 
 def validate(input_path: str) -> pd.DataFrame:
-
     df = pd.read_csv(input_path)
 
-    errors = []
-
-    # Schema validation
+    # 1. Schema validation
     missing_cols = EXPECTED_COLUMNS - set(df.columns)
 
     if missing_cols:
-        errors.append(
+        raise DataValidationError(
             f"Missing expected columns: {missing_cols}"
         )
 
-    # Null validation
+    errors = []
+
+    # 2. Null validation
     if df.isnull().any().any():
-
-        null_cols = (
-            df.columns[df.isnull().any()].tolist()
-        )
-
+        null_cols = df.columns[df.isnull().any()].tolist()
         errors.append(
             f"Unexpected null values in columns: {null_cols}"
         )
 
-    # Species validation
-    invalid_species = (
-        set(df["species"].unique()) -
-        VALID_SPECIES
-    )
+    # 3. Species validation
+    invalid_species = set(df["species"].unique()) - VALID_SPECIES
 
     if invalid_species:
-
         errors.append(
             f"Unexpected species values: {invalid_species}"
         )
 
-    # Range validation
+    # 4. Numeric range validation
     for col, (low, high) in RANGE_CHECKS.items():
-
         out_of_range = df[
-            (df[col] < low) |
-            (df[col] > high)
+            (df[col] < low) | (df[col] > high)
         ]
 
         if not out_of_range.empty:
-
             errors.append(
                 f"{len(out_of_range)} rows out of expected "
                 f"range for '{col}' ({low}-{high})"
             )
 
+    # 5. Raise error if any checks fail
     if errors:
-
         for error in errors:
             logger.error(error)
 
@@ -110,31 +95,23 @@ def validate(input_path: str) -> pd.DataFrame:
         "Validation PASSED: %d rows, %d columns, "
         "all checks satisfied",
         len(df),
-        df.shape[1]
+        df.shape[1],
     )
 
     return df
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
-
     parser.add_argument(
         "--input",
-        default="data/processed/iris_features.csv"
+        default="data/processed/iris_features.csv",
     )
-
     args = parser.parse_args()
 
     try:
         validate(args.input)
-
-    except DataValidationError as e:
-
-        logger.error(
-            "Pipeline halted: %s",
-            e
-        )
-
+    except DataValidationError as error:
+        logger.error("Pipeline halted: %s", error)
         sys.exit(1)
+
