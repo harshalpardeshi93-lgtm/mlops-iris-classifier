@@ -160,7 +160,6 @@ for model_name, model in models.items():
             zero_division=0
         )
 
-
         # -------------------------------------------------
         # Log parameters
         # -------------------------------------------------
@@ -184,7 +183,6 @@ for model_name, model in models.items():
                 model.max_depth
             )
 
-
         # -------------------------------------------------
         # Log metrics
         # -------------------------------------------------
@@ -193,7 +191,6 @@ for model_name, model in models.items():
         mlflow.log_metric("precision_macro", precision)
         mlflow.log_metric("recall_macro", recall)
         mlflow.log_metric("f1_macro", f1)
-
 
         # -------------------------------------------------
         # Confusion matrix
@@ -216,10 +213,8 @@ for model_name, model in models.items():
         plt.savefig(cm_filename)
         plt.close()
 
-
         # Log confusion matrix as artifact
         mlflow.log_artifact(cm_filename)
-
 
         # -------------------------------------------------
         # Log trained model
@@ -229,7 +224,6 @@ for model_name, model in models.items():
             model,
             artifact_path="model"
         )
-
 
         # -------------------------------------------------
         # Store result

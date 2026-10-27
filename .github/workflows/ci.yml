@@ -1,0 +1,118 @@
+name: ML CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-lint:
+    name: build-and-lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov flake8
+
+      - name: Compile Python files
+        run: python -m compileall -q src tests
+
+      - name: Lint source code
+        run: python -m flake8 src/ --max-line-length=100 --statistics
+
+  test-suite:
+    name: test-suite
+    runs-on: ubuntu-latest
+    needs: build-and-lint
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov flake8
+
+      - name: Prepare data directories
+        run: mkdir -p data/raw data/processed reports
+
+      - name: Collect data
+        run: python src/pipeline/collect.py --output data/raw/iris_raw.csv
+
+      - name: Preprocess data
+        run: |
+          python src/pipeline/preprocess.py \
+            --input data/raw/iris_raw.csv \
+            --output data/processed/iris_preprocessed.csv
+
+      - name: Engineer features
+        run: |
+          python src/pipeline/features.py \
+            --input data/processed/iris_preprocessed.csv \
+            --output data/processed/iris_features.csv
+
+      - name: Run tests and generate reports
+        run: |
+          python -m pytest tests/ \
+            --cov=src.pipeline \
+            --cov=src.train \
+            --cov-report=term-missing \
+            --cov-report=html:reports/coverage \
+            --junitxml=reports/test-results.xml
+
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-and-coverage-reports
+          path: reports/
+          if-no-files-found: warn
+
+  model-quality-gate:
+    name: model-quality-gate
+    runs-on: ubuntu-latest
+    needs: test-suite
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Check model quality
+        run: python -m pytest tests/test_model_quality.py -v

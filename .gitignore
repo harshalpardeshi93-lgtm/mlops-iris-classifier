@@ -65,3 +65,4 @@ mlartifacts/
 
 # Generated confusion matrices
 confusion_matrix_*.png
+.coverage

@@ -114,4 +114,3 @@ if __name__ == "__main__":
     except DataValidationError as error:
         logger.error("Pipeline halted: %s", error)
         sys.exit(1)
-
